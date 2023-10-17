@@ -1,0 +1,994 @@
+/// PARKER JOHNSON DSD CODE ///
+
+
+//- MAIN TABLES -//
+
+-- orders table
+CREATE TABLE DSD_tblOrders
+(
+	-- main order fields
+	Order# int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	OrderDate date NOT NULL,
+	
+	-- foreign key fields/links
+	Customer# int NOT NULL,
+	PaymentType# int NOT NULL,
+	
+	FOREIGN KEY (Customer#) REFERENCES DSD_tblCustomers(Customer#),
+	FOREIGN KEY (PaymentType#) REFERENCES DSD_tblPaymentType (PaymentType#)
+);
+
+-- products table
+CREATE TABLE DSD_tblProducts
+(
+	-- main product fields
+	Product# int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	ProductName varchar(100) NOT NULL,
+	ProductDescription varchar(500),
+	ProductPrice Money NOT NULL,
+	ProductStock int NOT NULL,
+	
+	-- foreign key fields/links
+	supplier# int NOT NULL
+	
+	FOREIGN KEY (supplier#) REFERENCES DSD_tblSuppliers (Supplier#)
+);
+
+-- payment type table
+CREATE TABLE DSD_tblPaymentType
+(
+	-- payment type fields
+	PaymentType# int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	PaymentType varchar(50) NOT NULL
+);
+
+-- order details table
+CREATE TABLE DSD_tblOrderDetails
+(
+	-- order details = seperate table to store order quantity
+	Order# int NOT NULL,
+	Product# int NOT NULL,
+	OrderQuantity int NOT NULL
+
+	-- uses order# and product# for compound key
+	PRIMARY KEY (Order#, Product#)	
+);
+
+-- SUPPLIER TABLE
+CREATE TABLE DSD_tblSuppliers
+(
+	-- main supplier fields
+	Supplier# int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	SupplierName varchar(50) NOT NULL,
+	SupplierPhone# varchar(11) NOT NULL,
+	SupplierEmail varchar(75) NOT NULL,
+	
+	-- supplier address
+	SupplierAddress varchar(50) NOT NULL,
+	SupplierTown varchar(50) NOT NULL,
+	SupplierPostcode varchar(7) NOT NULL,
+	SupplierCountry varchar(50) NOT NULL
+);
+
+
+-- CUSTOMER TABLE
+CREATE TABLE DSD_tblCustomers
+(
+	-- main customer fields
+	Customer# int IDENTITY(1,1) NOT NULL PRIMARY KEY,
+	CustomerFname varchar(50) NOT NULL,
+	CustomerSname varchar(50) NOT NULL,
+	CustomerPhone# varchar(11) NOT NULL,
+	CustomerEmail varchar(75) NOT NULL,
+	
+	-- customer address
+	CustomerAddress varchar(50) NOT NULL,
+	CustomerTown varchar(50) NOT NULL,
+	CustomerPostcode varchar(7) NOT NULL,
+	CustomerCountry varchar(50) NOT NULL 
+);
+
+
+
+//- STATUS TABLES -//
+
+-- order status table
+CREATE TABLE DSD_tblStatusOrders
+(
+	-- order status details
+	Order# int NOT NULL,
+	ChangeType varchar(20) NOT NULL,
+	ChangeTimeStamp datetime NOT NULL,
+	ChangeUser varchar(20) NOT NULL
+		
+	-- order status primary key
+	PRIMARY KEY(Order#, ChangeTimeStamp)
+);
+
+-- products status table
+CREATE TABLE DSD_tblStatusProducts
+(
+	-- product status details
+	Product# int NOT NULL,
+	ChangeType varchar(20) NOT NULL,
+	ChangeTimeStamp datetime NOT NULL,
+	ChangeUser varchar(20) NOT NULL
+		
+	-- order status primary key
+	PRIMARY KEY(Product#, ChangeTimeStamp)
+);
+
+-- payment type status table
+CREATE TABLE DSD_tblStatusPaymentType
+(
+	-- payment type status details
+	PaymentType# int NOT NULL,
+	ChangeType varchar(20) NOT NULL,
+	ChangeTimeStamp datetime NOT NULL,
+	ChangeUser varchar(20) NOT NULL
+		
+	-- payment type status primary key
+	PRIMARY KEY(PaymentType#, ChangeTimeStamp)
+);
+
+-- order details status table
+CREATE TABLE DSD_tblStatusOrderDetails
+(
+	-- order details status details
+	Order# int NOT NULL,
+	Product# int NOT NULL,
+	ChangeType varchar(20) NOT NULL,
+	ChangeTimeStamp datetime NOT NULL,
+	ChangeUser varchar(20) NOT NULL
+		
+	-- order details status primary key
+	PRIMARY KEY(Order#, ChangetimeStamp)
+);
+
+-- supplier status table
+CREATE TABLE DSD_tblStatusSupplier
+(
+	-- supplier status details
+	Supplier# int NOT NULL,
+	ChangeType varchar(20) NOT NULL,
+	ChangeTimeStamp datetime NOT NULL,
+	ChangeUser varchar(20) NOT NULL
+		
+	-- supplier status primary key
+	PRIMARY KEY(Supplier#, ChangeTimeStamp)
+);
+
+-- customer status table
+CREATE TABLE DSD_tblStatusCustomer
+(
+	-- customer status details
+	Customer# int NOT NULL,
+	ChangeType varchar(20) NOT NULL,
+	ChangeTimeStamp datetime NOT NULL,
+	ChangeUser varchar(20) NOT NULL
+		
+	-- customer status primary key
+	PRIMARY KEY(Customer#, ChangeTimeStamp)
+);
+
+
+
+//- STORED PROCEDURES -//
+
+-- order sp for create/update/delete
+CREATE PROCEDURE DSD_spOrders
+	@OrderDate date,
+	@Customer# int,
+	@PaymentType# int,
+	@Order# int,
+	@myType varchar(20)
+AS BEGIN
+
+IF @myType = 'insert'
+	BEGIN
+		INSERT INTO DSD_tblOrders
+		(
+			OrderDate
+			Customer#
+			PaymentType#
+		)
+		VALUES
+		(
+			@OrderDate,
+			@Customer#,
+			@PaymentType#
+		)
+	END
+
+IF @myType = 'update'
+	BEGIN
+		UPDATE DSD_tblOrders
+		SET
+			OrderDate = @OrderDate,
+			Customer# = @Customer#,
+			PaymentType# = @PaymentType#
+		WHERE
+			Order# = @Order#
+	END
+
+ELSE IF @myType = 'delete'
+	BEGIN
+		DELETE FROM DSD_tblOrders
+		WHERE 
+			Order# = @Order#
+	END
+END;
+
+-- product sp for create/update/delete
+CREATE PROCEDURE DSD_spProducts
+	@Product# int,
+	@ProductName varchar(100),
+	@ProductDescription varchar(500),
+	@ProductPrice money,
+	@ProductStock int,
+	@Supplier# int,
+	@myType varchar(20)
+AS BEGIN
+
+IF @myType = 'insert'
+	BEGIN
+		INSERT INTO DSD_tblProducts
+		(
+			ProductName,
+			ProductDescription,
+			ProductPrice,
+			ProductStock,
+			Supplier#
+		)
+		VALUES
+		(
+			@ProductName,
+			@ProductDescription,
+			@ProductPrice,
+			@ProductStock,
+			@Supplier#
+		)
+	END
+
+IF @myType = 'update'
+	BEGIN
+		UPDATE DSD_tblProducts
+		SET
+			ProductName = @ProductName,
+			ProductDescription = @ProductDescription,
+			ProductPrice = @ProductPrice,
+			ProductStock = @ProductStock,
+			Supplier# = @Supplier#
+		WHERE 
+			Product# = @Product#
+	END
+
+IF @myType = 'delete'
+	BEGIN
+		DELETE FROM DSD_spProducts
+		WHERE
+			Product# = @Product#
+	END
+END;
+
+-- payment type sp for create/update/delete
+CREATE PROCEDURE DSD_spPaymentType
+	@PaymentType# int,
+	@PaymentType varchar(50),
+	@myType varchar(20)
+AS BEGIN
+
+IF @myType = 'insert'
+	BEGIN
+		INSERT INTO DSD_tblPaymentType
+		(
+			PaymentType
+		)
+		VALUES
+		(
+			@PaymentType
+		)
+	END
+	
+IF @myType = 'update'
+	BEGIN 
+		UPDATE DSD_tblPaymentType
+		SET 
+			PaymentType = @PaymentType
+		WHERE 
+			PaymentType# = @PaymentType#
+	END
+	
+IF @myType = 'delete'
+	BEGIN
+		DELETE FROM DSD_tblPaymentType
+		WHERE
+			PaymentType# = @PaymentType#
+	END
+END;
+
+-- order details sp for create/update/delete
+CREATE PROCEDURE DSD_spOrderDetails
+	@Order# int,
+	@Product# int,
+	@OrderQuantity int,
+	@myType varchar(20)
+AS BEGIN
+	
+IF @myType = 'insert'
+	BEGIN
+		INSERT INTO DSD_tblOrderDetails
+		(
+			Order#,
+			Product#,
+			OrderQuantity
+		)
+		VALUES
+		(
+			@Order#,
+			@Product#,
+			@OrderQuantity
+		)
+	END
+
+IF @myType = 'update'
+	BEGIN
+		UPDATE DSD_tblOrderDetails
+		SET
+			Order# = @Order#,
+			Product# = @Product#,
+			OrderQuantity = @OrderQuantity
+		WHERE
+			Order# = @Order# AND
+			Product# = @Product#
+	END
+	
+IF @myType = 'delete'
+	BEGIN
+		DELETE FROM DSD_tblOrderDetails
+		WHERE 
+			Order# = @Order# AND
+			Product# = @Product#
+	END
+END;
+
+-- supplier sp for create/update/delete
+CREATE PROCEDURE DSD_spSupplier
+	@Supplier# int,
+	@SupplierName varchar(50),
+	@SupplierPhone# varchar(11),
+	@SupplierEmail varchar(75),
+	@SupplierAddress varchar(50),
+	@SupplierTown varchar(50),
+	@SupplierPostCode varchar(7),
+	@SupplierCountry varchar(50),
+	@myType varchar(20)
+AS BEGIN
+
+IF @myType = 'insert'
+	BEGIN
+		INSERT INTO DSD_tblSuppliers
+		(
+			SupplierName,
+			SupplierPhone#,
+			SupplierEmail,
+			SupplierAddress,
+			SupplierTown,
+			SupplierPostCode,
+			SupplierCountry
+		)
+		VALUES
+		(
+			@SupplierName,
+			@SupplierPhone#,
+			@SupplierEmail,
+			@SupplierAddress,
+			@SupplierTown,
+			@SupplierPostCode,
+			@SupplierCountry
+		)
+	END
+
+IF @myType = 'update'
+	BEGIN
+		UPDATE DSD_tblSuppliers
+		SET
+			SupplierName = @SupplierName,
+			SupplierPhone# = @SupplierPhone#,
+			SupplierEmail = @SupplierEmail,
+			SupplierAddress = @SupplierAddress,
+			SupplierTown = @SupplierTown,
+			SupplierPostCode = @SupplierPostCode,
+			SupplierCountry = @SupplierCountry
+		WHERE
+			Supplier# = @Supplier#
+	END
+	
+IF @myType = 'delete'
+	BEGIN
+		DELETE FROM DSD_tblSuppliers
+		WHERE
+			Supplier# = @Supplier#
+	END
+END;
+
+EXEC DSD_spCustomer
+    @Supplier# = 1
+	@SupplierName = 'Sean Johnson'
+	@SupplierPhone# = '07748293044'
+	@SupplierEmail = 'sj@gmail.com'
+	@SupplierAddress = '12 road'
+	@SupplierTown = 'belfast'
+	@SupplierPostCode = 'BT950TE'
+	@SupplierCountry = 'UK'
+	@myType = insert
+
+-- customer sp for create/update/delete
+CREATE PROCEDURE DSD_spCustomer
+	@Customer# int,
+	@CustomerFname varchar(50),
+	@CustomerSname varchar(50),
+	@CustomerPhone# varchar(11),
+	@CustomerEmail varchar(75),
+	@CustomerAddress varchar(50),
+	@CustomerTown varchar(50),
+	@CustomerPostcode varchar(7),
+	@CustomerCountry varchar(50),
+	@myType varchar(20)
+AS BEGIN 
+
+IF @myType = 'insert'
+	BEGIN
+		INSERT INTO DSD_tblCustomers
+		(
+			
+			CustomerFname,
+			CustomerSname,
+			CustomerPhone#,
+			CustomerEmail,
+			CustomerAddress,
+			CustomerTown,
+			CustomerPostcode,
+			CustomerCountry
+		)
+		VALUES
+		(
+		
+			@CustomerFname,
+			@CustomerSname,
+			@CustomerPhone#,
+			@CustomerEmail,
+			@CustomerAddress,
+			@CustomerTown,
+			@CustomerPostcode,
+			@CustomerCountry
+		)
+	END
+	
+IF @myType = 'update'
+	BEGIN 
+		UPDATE DSD_tblCustomers
+		SET 
+			CustomerFname = @CustomerFname,
+			CustomerSname = @CustomerSname,
+			CustomerPhone# = @CustomerPhone#,
+			CustomerEmail = @CustomerEmail,
+			CustomerAddress = @CustomerAddress,
+			CustomerTown = @CustomerTown,
+			CustomerPostcode = @CustomerPostcode,
+			CustomerCountry = @CustomerCountry
+		WHERE
+			Customer# = @Customer#
+	END
+	
+IF @myType = 'delete'
+	BEGIN
+		DELETE FROM DSD_tblCustomers
+		WHERE
+			Customer# = @Customer#
+	END
+END;
+		
+EXEC DSD_spCustomer
+	@Customer# = 1,
+	@CustomerFname = 'Parker',
+	@CustomerSname = 'Johnson',
+	@CustomerPhone# = '07784399734',
+	@CustomerEmail = '1parkerj1@gmail.com',
+	@CustomerAddress = '11 Glebe Gardens',
+	@CustomerTown = 'Moira',
+	@CustomerPostcode = 'BT670TU',
+	@CustomerCountry = 'UK',
+	@myType = 'insert'
+	
+
+
+//- TRIGGERS -//
+
+-- orders insert trigger
+CREATE TRIGGER DSD_trgInsertOrders ON DSD_tblOrders
+FOR INSERT
+AS
+	DECLARE @newOrder# int
+	SET @newOrder# = (SELECT Order# FROM inserted)
+	
+	INSERT INTO DSD_tblStatusOrders
+	(
+		Order#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newOrder#,
+		'insert',
+		GETDATE(),
+		USER_NAME()
+	);
+	
+-- orders update trigger
+CREATE TRIGGER DSD_trgUpdateOrder ON DSD_tblOrders
+FOR UPDATE
+AS
+	DECLARE @newOrder# int
+	SET @newOrder# = (SELECT Order# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusOrders
+	(
+		Order#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newOrder#,
+		'update',
+		GETDATE(),
+		USER_NAME()
+	);
+	
+-- orders delete trigger
+CREATE TRIGGER DSD_trgDeleteOrder ON DSD_tblOrders
+FOR DELETE
+AS
+	DECLARE @newOrder# int
+	SET @newOrder# = (SELECT Order# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusOrders
+	(
+		Order#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newOrder#, 
+		'delete',
+		GETDATE(),
+		USER_NAME()
+	);
+
+
+-- products insert trigger
+CREATE TRIGGER DSD_trgInsertProduct ON DSD_tblProducts
+FOR INSERT
+AS
+	DECLARE @newProduct# int
+	SET @newProduct# = (SELECT Product# FROM inserted)
+	
+	INSERT INTO DSD_tblStatusProducts
+	(
+		Product#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newProduct#,
+		'insert',
+		GETDATE(),
+		USER_NAME()
+	);
+	
+-- products update trigger
+CREATE TRIGGER DSD_trgUpdateProduct ON DSD_tblProducts
+FOR UPDATE
+AS
+	DECLARE @newProduct# int
+	SET @newProduct# = (SELECT Product# FROM deleted)
+	
+		INSERT INTO DSD_tblStatusProducts
+	(
+		Product#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newPaymentType#,
+		'update',
+		GETDATE(),
+		USER_NAME()
+	);
+
+-- products delete trigger
+CREATE TRIGGER DSD_trgDeleteProduct ON DSD_tblProducts
+FOR DELETE
+AS
+	DECLARE @newProduct# int
+	SET @newProduct# = (SELECT Product# FROM deleted)
+	
+		INSERT INTO DSD_tblStatusProducts
+	(
+		Product#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+
+		@newProduct#,
+		'delete',
+		GETDATE(),
+		USER_NAME()
+	);
+
+
+-- payment type insert trigger
+CREATE TRIGGER DSD_trgInsertPaymentType ON DSD_tblPaymentType
+FOR INSERT
+AS
+	DECLARE @newPaymentType# int
+	SET @newPaymentType# = (SELECT PaymentType# FROM inserted)
+	
+	INSERT INTO DSD_tblStatusPaymentType
+	(
+		PaymentType#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newPaymentType#,
+		'insert',
+		GETDATE(),
+		USER_NAME()
+	);
+	
+-- payment type update trigger
+CREATE TRIGGER DSD_trgUpdatePaymentType ON DSD_tblPaymentType
+FOR UPDATE
+AS
+	DECLARE @newPaymentType# int
+	SET @newPaymentType# = (SELECT PaymentType# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusPaymentType
+	(
+		PaymentType#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newPaymentType#,
+		'update',
+		GETDATE(),
+		USER_NAME()
+	);
+	
+-- payment type delete trigger
+CREATE TRIGGER DSD_trgDeletePaymentType ON DSD_tblPaymentType
+FOR DELETE
+AS
+	DECLARE @newPaymentType# int
+	SET @newPaymentType# = (SELECT PaymentType# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusPaymentType
+	(
+		PaymentType#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newPaymentType#,
+		'delete',
+		GETDATE(),
+		USER_NAME()
+	);
+
+
+-- order details insert trigger
+CREATE TRIGGER DSD_trgInsertOrderDetails ON DSD_tblOrderDetails
+FOR INSERT
+AS
+	DECLARE @newOrder# int
+	SET @newOrder# = (SELECT Order# FROM inserted)
+
+	DECLARE @newProduct# int
+	SET @newProduct# = (SELECT Product# FROM inserted)
+
+	INSERT INTO DSD_tblStatusOrderDetails
+	(
+		Order#,
+		Product#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newOrder#,
+		@newProduct#,
+		'insert',
+		GETDATE(),
+		USER_NAME()
+	);
+
+-- order details update trigger
+CREATE TRIGGER DSD_trgUpdateOrderDetails ON DSD_tblOrderDetails
+FOR UPDATE 
+AS
+	DECLARE @newOrder# int
+	SET @newOrder# = (SELECT Order# FROM inserted)
+
+	DECLARE @newProduct# int
+	SET @newProduct# = (SELECT Product# FROM inserted)
+
+	INSERT INTO DSD_tblStatusOrderDetails
+	(
+		Order#,
+		Product#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newOrder#,
+		@newProduct#,
+		'update',
+		GETDATE(),
+		USER_NAME()
+	);
+	
+-- order details delete trigger
+CREATE TRIGGER DSD_trgDeleteOrderDetails ON DSD_tblOrderDetails
+FOR DELETE
+AS
+	DECLARE @newOrder# int
+	SET @newOrder# = (SELECT Order# FROM deleted)
+
+	DECLARE @newProduct# int
+	SET @newProduct# = (SELECT Product# FROM deleted)
+
+	INSERT INTO DSD_tblStatusOrderDetails
+	(
+		Order#,
+		Product#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newOrder#,
+		@newProduct#,
+		'delete',
+		GETDATE(),
+		USER_NAME()
+	);
+
+
+-- supplier insert trigger
+CREATE TRIGGER DSD_trgInsertSupplier ON DSD_tblSuppliers
+FOR INSERT
+AS
+	DECLARE @newSupplier# int
+	SET @newSupplier# = (SELECT Supplier# FROM inserted)
+	
+	INSERT INTO DSD_tblStatusSupplier
+	(
+		Supplier#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newSupplier#,
+		'insert',
+		GETDATE(),
+		USER_NAME()
+	);
+
+-- supplier update trigger
+CREATE TRIGGER DSD_trgUpdateSupplier ON DSD_tblSuppliers
+FOR UPDATE
+AS
+	DECLARE @newSupplier# int
+	SET @newSupplier# = (SELECT Supplier# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusSupplier
+	(
+		Supplier#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newSupplier#,
+		'update',
+		GETDATE(),
+		USER_NAME()
+	);
+
+-- supplier delete trigger
+CREATE TRIGGER DSD_trgDeleteSupplier ON DSD_tblSuppliers
+FOR DELETE
+AS
+	DECLARE @newSupplier# int
+	SET @newSupplier# = (SELECT Supplier# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusSupplier
+	(
+		Supplier#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newSupplier#,
+		'delete',
+		GETDATE(),
+		USER_NAME()
+	);
+
+
+-- customer insert trigger
+CREATE TRIGGER DSD_trgInsertCustomer ON DSD_tblCustomers
+FOR INSERT
+AS
+	DECLARE @newCustomer# int
+	SET @newCustomer# = (SELECT Customer# FROM inserted)
+	
+	INSERT INTO DSD_tblStatusCustomer
+	(
+		Customer#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newCustomer#,
+		'insert',
+		GETDATE(),
+		USER_NAME()
+	);
+
+-- customer update trigger
+CREATE TRIGGER DSD_trgUpdateCustomer ON DSD_tblCustomers
+FOR UPDATE
+AS
+	DECLARE @newCustomer# int
+	SET @newCustomer# = (SELECT Customer# FROM deleted) 
+		
+	INSERT INTO DSD_tblStatusCustomer
+	(
+		Customer#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newCustomer#,
+		'update',
+		GETDATE(),
+		USER_NAME()
+	);
+
+-- customer delete trigger
+CREATE TRIGGER DSD_trgDeleteCustomer ON DSD_tblCustomers
+FOR DELETE
+AS
+	DECLARE @newCustomer# int
+	SET @newCustomer# = (SELECT Customer# FROM deleted)
+	
+	INSERT INTO DSD_tblStatusCustomer
+	(
+		Customer#,
+		ChangeType,
+		ChangeTimeStamp,
+		ChangeUser
+	)
+	VALUES
+	(
+		@newCustomer#,
+		'delete',
+		GETDATE(),
+		USER_NAME()
+	);
+
+
+
+//- SERVER VIEWS -//
+	
+-- total product price by month/supplier
+CREATE VIEW DSD_viewTotalProductPriceMonthly AS
+
+SELECT 
+o.Order#, 
+o.OrderDate,
+s.SupplierName,
+p.ProductName,
+(p.ProductPrice * od.OrderQuantity) AS Total Price
+
+FROM DSD_tblOrders as o
+INNER JOIN DSD_tblOrderDetails AS od ON o.Order# = od.Order#
+INNER JOIN DSD_tblProducts AS p ON p.Product# = p.Product#
+INNER JOIN DSD_tblSuppliers AS s ON s.Supplier# = s.Supplier#
+
+WHERE o.OrderDate >= GETDATE() AND o.OrderDate < DATEADD(MONTH, +1, GETDATE());
+
+
+-- showing customers added in status table
+CREATE VIEW DSD_viewNewCustomersAdded AS
+
+SELECT
+c.Customer#,
+(c.CustomerFname + c.CustomerSname) AS CustomerName,
+cs.ChangeType,
+cs.ChangeTimeStamp
+
+FROM DSD_tblCustomers AS c
+INNER JOIN DSD_tblStatusCustomer AS cs ON c.Customer# = cs.Customer#
+WHERE cs.ChangeType = 'insert';
+
+
+-- orders before today
+CREATE VIEW DSD_viewAllOrdersBeforeToday AS
+
+SELECT 
+o.Order#,
+o.OrderDate
+
+FROM DSD_tblOrders AS o
+WHERE o.OrderDate <  DATEADD(day, DATEDIFF(day,0,GETDATE()),0);
+
+
+
+-- orders by country
+CREATE VIEW DSD_viewOrdersByCountry AS
+
+SELECT 
+o.Order#,
+c.Customer#,
+c.CustomerCountry
+
+FROM DSD_tblOrders AS o
+INNER JOIN DSD_tblCustomers AS c ON o.Customer# = c.Customer#
+ORDER BY c.CustomerCountry offset 0 rows;
+
+
+-- total orders by customer
+CREATE VIEW DSD_viewTotalCustomerOrders AS
+
+SELECT
+o.Customer#,
+COUNT(*) AS Orders
+
+FROM DSD_tblOrders AS o
+GROUP BY o.Customer#;
